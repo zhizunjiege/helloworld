@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui" />
+    <style type="text/css">
+      .custom-input-text,
+      .custom-input-autocomplete {
+        float: right !important;
+        width: 240px;
+      }
+      .custom-input-switch {
+        float: right !important;
+        width: 48px;
+        margin-top: 0;
+        padding-top: 0;
+      }
+      .custom-input-checkbox {
+        float: right !important;
+        width: 24px;
+        margin-top: 0;
+        padding-top: 0;
+      }
+      .custom-input-textarea {
+        float: right !important;
+        width: 400px;
+        margin: 8px 0 !important;
+        padding-top: 0;
+      }
+      .v-expansion-panel-content__wrap {
+        padding-bottom: 0;
+      }
+      .v-expansion-panel--active > .v-expansion-panel-header {
+        min-height: 48px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <v-app id="inspire">
+        <v-navigation-drawer v-model="drawer" app clipped :width="200">
+          <v-list class="py-0">
+            <v-list-item-group style="position: static">
+              <div style="position: absolute; left: 0; top: 0; width: 100%">
+                <v-list-item link v-for="(tab,index) in tabs.prepend" :key="index" @click.stop="displayComponent(tab.component)">
+                  <v-list-item-action>
+                    <v-icon>{{ tab.icon }}</v-icon>
+                  </v-list-item-action>
+                  <v-list-item-content>
+                    <v-list-item-title> {{ tab.text }} </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </div>
+              <div style="position: absolute; left: 0; bottom: 0; width: 100%">
+                <v-list-item link v-for="(tab,index) in tabs.append" :key="index" @click.stop="displayComponent(tab.component)">
+                  <v-list-item-action>
+                    <v-icon color="grey darken-1">{{ tab.icon }}</v-icon>
+                  </v-list-item-action>
+                  <v-list-item-content>
+                    <v-list-item-title class="grey--text text--darken-1"> {{ tab.text }} </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </div>
+            </v-list-item-group>
+          </v-list>
+        </v-navigation-drawer>
+
+        <v-app-bar app clipped-left dense color="black">
+          <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+          <v-icon class="mx-4" large> mdi-semantic-web </v-icon>
+          <v-toolbar-title class="mr-12 align-center">
+            <span class="title font-italic">CQSIM</span>
+          </v-toolbar-title>
+
+          <v-menu offset-y v-for="(menu,index) in menus" :key="index">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn text dark v-bind="attrs" v-on="on" class="mr-3">
+                <v-icon small class="mr-3"> {{ menu.icon }} </v-icon>
+                {{menu.text}}
+                <v-icon right>mdi-menu-down</v-icon>
+              </v-btn>
+            </template>
+            <v-list dense>
+              <v-list-item v-for="(item, index) in menu.items" :key="index" @click="displayComponent(item.component)">
+                <v-icon class="mr-3">{{ item.icon }}</v-icon>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+
+          <!-- <v-spacer></v-spacer> -->
+          <!-- <v-row align="center" style="max-width: 650px">
+            <v-text-field :append-icon-cb="() => {}" placeholder="Search..." single-line append-icon="mdi-magnify"
+              color="white" hide-details></v-text-field>
+          </v-row> -->
+        </v-app-bar>
+
+        <v-main>
+          <v-container v-if="display=='qdy'" class="fill-height">
+            <v-row v-if="tasks.length" justify="space-around" align="center">
+              <v-col xl="5" lg="6" md="7">
+                <div class="text-h5 mb-5">最近任务</div>
+                <v-simple-table>
+                  <template v-slot:default>
+                    <thead>
+                      <tr>
+                        <th class="text-left">任务名称</th>
+                        <th class="text-left">创建时间</th>
+                        <th class="text-left">修改时间</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(task, index) in tasks" :key="index">
+                        <td>
+                          <a href="#" :title="task.name" class="text-decoration-none d-inline-block text-truncate" style="max-width: 160px">{{task.name}}</a>
+                        </td>
+                        <td>{{task.createdTime }}</td>
+                        <td>{{task.updatedTime }}</td>
+                      </tr>
+                    </tbody>
+                  </template>
+                </v-simple-table>
+                <div style="visibility: hidden; width: 100%; height: 300px"></div>
+              </v-col>
+              <v-col cols="3">
+                <div style="visibility: hidden; width: 100%; height: 200px"></div>
+                <div>
+                  <v-btn text dark color="primary" class="text-subtitle-1">
+                    <v-icon small class="mr-3"> mdi-folder-open </v-icon>
+                    打开任务...</v-btn
+                  >
+                </div>
+                <div style="visibility: hidden; width: 100%; height: 100px"></div>
+                <div>
+                  <v-btn text dark color="primary" class="text-subtitle-1"> <v-icon small class="mr-3"> mdi-plus-circle </v-icon>新建任务...</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row v-else justify="center" align="center">
+              <v-col class="shrink">
+                <v-btn text dark color="primary" class="text-h6"> <v-icon class="mr-3"> mdi-plus-circle </v-icon>新建任务...</v-btn>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="display=='xtsz'">
+            <v-row justify="center" align="start">
+              <v-col xl="5" lg="6" md="7">
+                <template v-for="(panel,index) in configs">
+                  <div class="text-subtitle-1 mt-5">{{panel.title}}</div>
+                  <v-simple-table v-for="(table,index) in panel.tables" :key="index" class="mt-3">
+                    <template v-slot:default>
+                      <tbody>
+                        <tr v-for="(item, index) in table.items" :key="index">
+                          <td>{{item.name}}</td>
+                          <td class="py-1">
+                            <v-autocomplete
+                              v-if="item.type=='select'"
+                              v-model="item.values"
+                              :items="item.options"
+                              :label="item.label"
+                              :multiple="item.multiple"
+                              solo
+                              dark
+                              dense
+                              hide-details
+                              background-color="#32353a"
+                              class="custom-input-autocomplete"
+                            ></v-autocomplete>
+                            <v-switch
+                              v-else-if="item.type=='switch'"
+                              v-model="item.value"
+                              :label="item.label"
+                              :multiple="item.multiple"
+                              inset
+                              dark
+                              hide-details
+                              class="custom-input-switch"
+                            ></v-switch>
+                            <v-checkbox
+                              v-else-if="item.type=='checkbox'"
+                              v-model="item.value"
+                              :label="item.label"
+                              :multiple="item.multiple"
+                              dark
+                              hide-details
+                              class="custom-input-checkbox"
+                            ></v-checkbox>
+                            <v-textarea
+                              v-else-if="item.type=='textarea'"
+                              v-model="item.value"
+                              :label="item.label"
+                              :readonly="item.readonly"
+                              :rows="item.rows"
+                              filled
+                              auto-grow
+                              clearable
+                              dark
+                              hide-details
+                              no-resize
+                              solo
+                              background-color="#32353a"
+                              class="custom-input-textarea"
+                            ></v-textarea>
+                            <v-text-field
+                              v-else
+                              v-model="item.value"
+                              :type="item.type"
+                              :label="item.label"
+                              :readonly="item.readonly"
+                              solo
+                              dark
+                              dense
+                              hide-details
+                              background-color="#32353a"
+                              class="custom-input-text"
+                            ></v-text-field>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </template>
+                  </v-simple-table>
+                </template>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="display=='rwsz'">
+            <v-row justify="center" align="start">
+              <v-col xl="5" lg="6" md="7" class="mb-12">
+                <template v-for="(panel,index0) in current.taskCfg">
+                  <div class="text-subtitle-1 mt-5">{{panel.title}}</div>
+                  <v-simple-table v-for="(table,index) in panel.tables" :key="`${index0}-${index}`" class="mt-3">
+                    <template v-slot:default>
+                      <tbody>
+                        <tr v-for="(item, index) in table.items" :key="index">
+                          <td>{{item.name}}</td>
+                          <td class="py-1">
+                            <v-autocomplete
+                              v-if="item.type=='select'"
+                              v-model="item.values"
+                              :items="item.options"
+                              :label="item.label"
+                              :multiple="item.multiple"
+                              solo
+                              dark
+                              dense
+                              hide-details
+                              background-color="#32353a"
+                              class="custom-input-autocomplete"
+                            ></v-autocomplete>
+                            <v-switch
+                              v-else-if="item.type=='switch'"
+                              v-model="item.value"
+                              :label="item.label"
+                              :multiple="item.multiple"
+                              inset
+                              dark
+                              hide-details
+                              class="custom-input-switch"
+                            ></v-switch>
+                            <v-checkbox
+                              v-else-if="item.type=='checkbox'"
+                              v-model="item.value"
+                              :label="item.label"
+                              :multiple="item.multiple"
+                              dark
+                              hide-details
+                              class="custom-input-checkbox"
+                            ></v-checkbox>
+                            <v-textarea
+                              v-else-if="item.type=='textarea'"
+                              v-model="item.value"
+                              :label="item.label"
+                              :readonly="item.readonly"
+                              :rows="item.rows"
+                              filled
+                              auto-grow
+                              clearable
+                              dark
+                              hide-details
+                              no-resize
+                              solo
+                              background-color="#32353a"
+                              class="custom-input-textarea"
+                            ></v-textarea>
+                            <v-text-field
+                              v-else
+                              v-model="item.value"
+                              :type="item.type"
+                              :label="item.label"
+                              :readonly="item.readonly"
+                              solo
+                              dark
+                              dense
+                              hide-details
+                              background-color="#32353a"
+                              class="custom-input-text"
+                            ></v-text-field>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </template>
+                  </v-simple-table>
+                </template>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="display=='sjzh'">
+            <v-row justify="center" align="start">
+              <v-col xl="5" lg="6" md="7" class="mb-12">
+                <template v-for="(panel,index0) in current.dataCfg">
+                  <div class="text-subtitle-1 mt-5">{{panel.title}}</div>
+                  <template v-for="(table,index) in panel.tables">
+                    <div v-if="table.title" class="text-subtitle-2 mt-3">{{table.title}}</div>
+                    <v-simple-table class="mt-3">
+                      <template v-slot:default>
+                        <tbody>
+                          <tr v-for="(item, index) in table.items" :key="index">
+                            <td>{{item.name}}</td>
+                            <td class="py-1">
+                              <v-autocomplete
+                                v-if="item.type=='select'"
+                                v-model="item.values"
+                                :items="item.options"
+                                :label="item.label"
+                                :multiple="item.multiple"
+                                solo
+                                dark
+                                dense
+                                hide-details
+                                background-color="#32353a"
+                                class="custom-input-autocomplete"
+                              ></v-autocomplete>
+                              <v-switch
+                                v-else-if="item.type=='switch'"
+                                v-model="item.value"
+                                :label="item.label"
+                                :multiple="item.multiple"
+                                inset
+                                dark
+                                hide-details
+                                class="custom-input-switch"
+                              ></v-switch>
+                              <v-checkbox
+                                v-else-if="item.type=='checkbox'"
+                                v-model="item.value"
+                                :label="item.label"
+                                :multiple="item.multiple"
+                                dark
+                                hide-details
+                                class="custom-input-checkbox"
+                              ></v-checkbox>
+                              <v-textarea
+                                v-else-if="item.type=='textarea'"
+                                v-model="item.value"
+                                :label="item.label"
+                                :readonly="item.readonly"
+                                :rows="item.rows"
+                                filled
+                                auto-grow
+                                clearable
+                                dark
+                                hide-details
+                                no-resize
+                                solo
+                                background-color="#32353a"
+                                class="custom-input-textarea"
+                              ></v-textarea>
+                              <v-text-field
+                                v-else
+                                v-model="item.value"
+                                :type="item.type"
+                                :label="item.label"
+                                :readonly="item.readonly"
+                                solo
+                                dark
+                                dense
+                                hide-details
+                                background-color="#32353a"
+                                class="custom-input-text"
+                              ></v-text-field>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </template>
+                    </v-simple-table>
+                  </template>
+                </template>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="display=='wlcs'">
+            <v-row justify="center" align="start">
+              <v-col xl="5" lg="6" md="7" class="mb-12">
+                <template v-for="(panel,index0) in current.modelCfg">
+                  <div class="text-subtitle-1 mt-5">{{panel.title}}</div>
+                  <template v-for="(table,index) in panel.tables">
+                    <div v-if="table.title" class="text-subtitle-2 mt-3">{{table.title}}</div>
+                    <v-expansion-panels v-if="table.nested" class="mt-3">
+                      <v-expansion-panel>
+                        <v-expansion-panel-header class="px-4">{{table.name}}</v-expansion-panel-header>
+                        <v-expansion-panel-content>
+                          <v-divider></v-divider>
+                          <div v-for="(nestedTable,index) in table.nestedTables" :key="index" class="mt-2">
+                            <div class="text-subtitle-2 mt-3 d-flex align-center">
+                              <span>第 {{index+1}} 层</span>
+                              <v-spacer></v-spacer>
+                              <v-btn icon text small class="ml-2" @click.stop="upLayer(index)"><v-icon>mdi-arrow-up</v-icon></v-btn>
+                              <v-btn icon text small class="ml-2" @click.stop="downLayer(index)"><v-icon>mdi-arrow-down</v-icon></v-btn>
+                              <v-btn icon text small class="ml-2" @click.stop="delLayer(index)"><v-icon>mdi-close</v-icon></v-btn>
+                            </div>
+                            <v-simple-table class="mt-2 grey darken-4">
+                              <template v-slot:default>
+                                <tbody>
+                                  <tr v-for="(item, index) in nestedTable.items" :key="index">
+                                    <td>{{item.name}}</td>
+                                    <td class="py-1">
+                                      <v-autocomplete
+                                        v-if="item.type=='select'"
+                                        v-model="item.values"
+                                        :items="item.options"
+                                        :label="item.label"
+                                        :multiple="item.multiple"
+                                        solo
+                                        dark
+                                        dense
+                                        hide-details
+                                        background-color="#32353a"
+                                        class="custom-input-autocomplete"
+                                      ></v-autocomplete>
+                                      <v-switch
+                                        v-else-if="item.type=='switch'"
+                                        v-model="item.value"
+                                        :label="item.label"
+                                        :multiple="item.multiple"
+                                        inset
+                                        dark
+                                        hide-details
+                                        class="custom-input-switch"
+                                      ></v-switch>
+                                      <v-checkbox
+                                        v-else-if="item.type=='checkbox'"
+                                        v-model="item.value"
+                                        :label="item.label"
+                                        :multiple="item.multiple"
+                                        dark
+                                        hide-details
+                                        class="custom-input-checkbox"
+                                      ></v-checkbox>
+                                      <v-textarea
+                                        v-else-if="item.type=='textarea'"
+                                        v-model="item.value"
+                                        :label="item.label"
+                                        :readonly="item.readonly"
+                                        :rows="item.rows"
+                                        filled
+                                        auto-grow
+                                        clearable
+                                        dark
+                                        hide-details
+                                        no-resize
+                                        solo
+                                        background-color="#32353a"
+                                        class="custom-input-textarea"
+                                      ></v-textarea>
+                                      <v-text-field
+                                        v-else
+                                        v-model="item.value"
+                                        :type="item.type"
+                                        :label="item.label"
+                                        :readonly="item.readonly"
+                                        solo
+                                        dark
+                                        dense
+                                        hide-details
+                                        background-color="#32353a"
+                                        class="custom-input-text"
+                                      ></v-text-field>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </template>
+                            </v-simple-table>
+                          </div>
+                          <v-btn block text class="my-2 grey darken-4" @click.stop="addLayer">
+                            <v-icon>mdi-plus</v-icon>
+                          </v-btn>
+                        </v-expansion-panel-content>
+                      </v-expansion-panel>
+                    </v-expansion-panels>
+                    <v-simple-table v-else class="mt-3">
+                      <template v-slot:default>
+                        <tbody>
+                          <tr v-for="(item, index) in table.items" :key="index">
+                            <td>{{item.name}}</td>
+                            <td class="py-1">
+                              <v-autocomplete
+                                v-if="item.type=='select'"
+                                v-model="item.values"
+                                :items="item.options"
+                                :label="item.label"
+                                :multiple="item.multiple"
+                                solo
+                                dark
+                                dense
+                                hide-details
+                                background-color="#32353a"
+                                class="custom-input-autocomplete"
+                              ></v-autocomplete>
+                              <v-switch
+                                v-else-if="item.type=='switch'"
+                                v-model="item.value"
+                                :label="item.label"
+                                :multiple="item.multiple"
+                                inset
+                                dark
+                                hide-details
+                                class="custom-input-switch"
+                              ></v-switch>
+                              <v-checkbox
+                                v-else-if="item.type=='checkbox'"
+                                v-model="item.value"
+                                :label="item.label"
+                                :multiple="item.multiple"
+                                dark
+                                hide-details
+                                class="custom-input-checkbox"
+                              ></v-checkbox>
+                              <v-textarea
+                                v-else-if="item.type=='textarea'"
+                                v-model="item.value"
+                                :label="item.label"
+                                :readonly="item.readonly"
+                                :rows="item.rows"
+                                filled
+                                auto-grow
+                                clearable
+                                dark
+                                hide-details
+                                no-resize
+                                solo
+                                background-color="#32353a"
+                                class="custom-input-textarea"
+                              ></v-textarea>
+                              <v-text-field
+                                v-else
+                                v-model="item.value"
+                                :type="item.type"
+                                :label="item.label"
+                                :readonly="item.readonly"
+                                solo
+                                dark
+                                dense
+                                hide-details
+                                background-color="#32353a"
+                                class="custom-input-text"
+                              ></v-text-field>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </template>
+                    </v-simple-table>
+                  </template>
+                </template>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-main>
+
+        <v-footer app dark class="py-0 px-8" :height="24">
+          <v-tooltip top v-for="(service,index) in services" :key="index" :color="serviceStatusColor(service.healthy, false)">
+            <template v-slot:activator="{ on, attrs }">
+              <v-hover v-slot:default="{ hover }">
+                <v-icon :size="12" v-bind="attrs" v-on="on" class="mr-4" :color="serviceStatusColor(service.healthy, hover)"> {{service.icon}}</v-icon>
+              </v-hover>
+            </template>
+            <v-icon small>{{ service.healthy?'mdi-check':'mdi-close' }}</v-icon>
+            <span> {{service.tooltip}}</span>
+          </v-tooltip>
+          <v-spacer></v-spacer>
+          <div>&copy; {{ new Date().getFullYear() }} V1.0</div>
+        </v-footer>
+      </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        vuetify: new Vuetify(),
+        props: {
+          source: String,
+        },
+        data: () => ({
+          drawer: null,
+          display: "wlcs",
+          menus: [
+            {
+              text: "任务",
+              icon: "mdi-sitemap",
+              items: [
+                { icon: "mdi-plus-circle", text: "新建任务", component: "qdy" },
+                { icon: "mdi-folder-open", text: "打开任务", component: "qdy" },
+                { icon: "mdi-close-circle", text: "关闭当前任务", component: "qdy" },
+                { icon: "mdi-content-save", text: "保存任务", component: "qdy" },
+                { icon: "mdi-content-save-move", text: "任务另存为...", component: "qdy" },
+              ],
+            },
+            {
+              text: "帮助",
+              icon: "mdi-help",
+              items: [
+                { icon: "mdi-handshake", text: "启动页", component: "qdy" },
+                { icon: "mdi-school", text: "入门指引", component: "qdy" },
+                { icon: "mdi-file-document", text: "用户文档", component: "qdy" },
+                { icon: "mdi-account", text: "关于我们", component: "qdy" },
+              ],
+            },
+          ],
+          tabs: {
+            prepend: [
+              { icon: "mdi-file-cog-outline", text: "任务设置", component: "rwsz" },
+              { icon: "mdi-transfer-right", text: "数据转换", component: "sjzh" },
+              { icon: "mdi-layers-triple", text: "网络参数", component: "wlcs" },
+              { icon: "mdi-monitor", text: "过程监控", component: "qdy" },
+              { icon: "mdi-chart-bar", text: "数据显示", component: "qdy" },
+            ],
+            append: [
+              { icon: "mdi-view-list", text: "任务管理", component: "qdy" },
+              { icon: "mdi-cog", text: "系统设置", component: "xtsz" },
+            ],
+          },
+          services: [
+            { icon: "mdi-airplane", tooltip: "仿真引擎", healthy: true },
+            { icon: "mdi-database", tooltip: "资源服务", healthy: true },
+            { icon: "mdi-head", tooltip: "推理服务", healthy: false },
+            { icon: "mdi-sd", tooltip: "存储服务", healthy: true },
+            { icon: "mdi-cloud", tooltip: "优化服务", healthy: true },
+          ],
+          tasks: [
+            {
+              name: "双机对抗（后面是填充字数用的）",
+              createdTime: new Date().toLocaleString(),
+              updatedTime: new Date().toLocaleString(),
+            },
+            {
+              name: "多机对抗",
+              createdTime: new Date().toLocaleString(),
+              updatedTime: new Date().toLocaleString(),
+            },
+          ],
+          // config->panel->table->item，所有设置都拆成原子
+          configs: [
+            {
+              title: "服务地址",
+              tables: [
+                {
+                  items: [
+                    {
+                      type: "text",
+                      key: "engineIp",
+                      value: "127.0.0.1",
+                      name: "仿真引擎IP",
+                      label: "请输入IP地址",
+                    },
+                    {
+                      type: "number",
+                      key: "enginePort",
+                      value: 50051,
+                      name: "仿真引擎端口",
+                      label: "请输入端口",
+                    },
+                  ],
+                },
+                {
+                  items: [
+                    {
+                      type: "text",
+                      key: "databaseIp",
+                      value: "127.0.0.1",
+                      name: "资源服务IP",
+                      label: "请输入IP地址",
+                    },
+                    {
+                      type: "number",
+                      key: "databasePort",
+                      value: 50050,
+                      name: "资源服务端口",
+                      label: "请输入端口",
+                    },
+                  ],
+                },
+                {
+                  items: [
+                    {
+                      type: "text",
+                      key: "infIp",
+                      value: "127.0.0.1",
+                      name: "推理服务IP",
+                      label: "请输入IP地址",
+                    },
+                    {
+                      type: "number",
+                      key: "infPort",
+                      value: 50052,
+                      name: "推理服务端口",
+                      label: "请输入端口",
+                    },
+                  ],
+                },
+                {
+                  items: [
+                    {
+                      type: "text",
+                      key: "memIp",
+                      value: "127.0.0.1",
+                      name: "存储服务IP",
+                      label: "请输入IP地址",
+                    },
+                    {
+                      type: "number",
+                      key: "memPort",
+                      value: 50053,
+                      name: "存储服务端口",
+                      label: "请输入端口",
+                    },
+                  ],
+                },
+                {
+                  items: [
+                    {
+                      type: "text",
+                      key: "optIp",
+                      value: "127.0.0.1",
+                      name: "优化服务IP",
+                      label: "请输入IP地址",
+                    },
+                    {
+                      type: "number",
+                      key: "optPort",
+                      value: 50054,
+                      name: "优化服务端口",
+                      label: "请输入端口",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              title: "其他设置",
+              tables: [
+                {
+                  items: [
+                    {
+                      type: "switch",
+                      key: "ifTbEnable",
+                      value: true,
+                      name: "启用 Tensorboard",
+                      label: "",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          current: {
+            taskId: 0,
+            taskCfg: [
+              {
+                title: "基本信息",
+                tables: [
+                  {
+                    items: [
+                      {
+                        type: "text",
+                        key: "taskName",
+                        value: "",
+                        name: "任务名称",
+                        label: "请输入任务名称",
+                      },
+                      {
+                        type: "text",
+                        key: "createdTime",
+                        value: new Date().toLocaleString(),
+                        name: "创建时间",
+                        label: "",
+                        readonly: true,
+                      },
+                      {
+                        type: "text",
+                        key: "updatedTime",
+                        value: new Date().toLocaleString(),
+                        name: "修改时间",
+                        label: "",
+                        readonly: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                title: "资源配置",
+                tables: [
+                  {
+                    items: [
+                      {
+                        type: "select",
+                        key: "scenarioId",
+                        values: null,
+                        name: "想定文件",
+                        label: "请选择想定文件",
+                        options: ["想定文件1", "想定文件2"],
+                      },
+                      {
+                        type: "select",
+                        key: "doeId",
+                        values: null,
+                        name: "试验设计方案",
+                        label: "请选择试验设计方案",
+                        options: ["试验设计方案1", "试验设计方案2", "试验设计方案3", "试验设计方案4"],
+                      },
+                      {
+                        type: "select",
+                        key: "proxyId",
+                        values: null,
+                        name: "智能代理模型",
+                        label: "请选择智能代理模型",
+                        options: ["智能代理模型1", "智能代理模型2", "智能代理模型3"],
+                        // multiple: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                title: "仿真参数",
+                tables: [
+                  {
+                    items: [
+                      {
+                        type: "text",
+                        key: "trainStep",
+                        value: null,
+                        name: "仿真步长",
+                        label: "请输入仿真步长",
+                      },
+                      {
+                        type: "text",
+                        key: "trainDuration",
+                        value: "1.0",
+                        name: "仿真倍速",
+                        label: "请输入仿真倍速",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                title: "其他设置",
+                tables: [
+                  {
+                    items: [
+                      {
+                        type: "number",
+                        key: "trainBatchSize",
+                        value: null,
+                        name: "训练批尺寸",
+                        label: "请输入训练批尺寸",
+                      },
+                      {
+                        type: "number",
+                        key: "maxTrainDuration",
+                        value: null,
+                        name: "最大训练时长（S）",
+                        label: "请输入最大训练时长",
+                      },
+                      {
+                        type: "number",
+                        key: "memoryCapacity",
+                        value: null,
+                        name: "存储服务容量（MB）",
+                        label: "请输入存储服务容量",
+                      },
+                      {
+                        type: "number",
+                        key: "trainFrequency",
+                        value: null,
+                        name: "神经网络优化频率（F/S）",
+                        label: "请输入神经网络优化频率",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            dataCfg: [
+              {
+                title: "态势数据",
+                tables: [
+                  {
+                    title: "模型1",
+                    items: [
+                      {
+                        type: "checkbox",
+                        key: "modelStatusParam_1_1",
+                        value: false,
+                        name: "参数1",
+                        label: "",
+                      },
+                      {
+                        type: "checkbox",
+                        key: "modelStatusParam_1_2",
+                        value: false,
+                        name: "参数2",
+                        label: "",
+                      },
+                    ],
+                  },
+                  {
+                    title: "模型2",
+                    items: [
+                      {
+                        type: "checkbox",
+                        key: "modelStatusParam_2_1",
+                        value: false,
+                        name: "参数1",
+                        label: "",
+                      },
+                      {
+                        type: "checkbox",
+                        key: "modelStatusParam_2_2",
+                        value: false,
+                        name: "参数2",
+                        label: "",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                title: "动作数据",
+                tables: [
+                  {
+                    title: "模型1",
+                    items: [
+                      {
+                        type: "checkbox",
+                        key: "modelActionParam_1_1",
+                        value: false,
+                        name: "参数1",
+                        label: "",
+                      },
+                    ],
+                  },
+                  {
+                    title: "模型2",
+                    items: [
+                      {
+                        type: "checkbox",
+                        key: "modelActionParam_2_1",
+                        value: false,
+                        name: "参数1",
+                        label: "",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                title: "奖励函数",
+                tables: [
+                  {
+                    items: [
+                      {
+                        type: "textarea",
+                        key: "rewardFunc",
+                        value: `def reward_func(s:np.ndarray, a:np.ndarray, s_:np.ndarray)->float:\n\t'''编写奖励函数.
+                        \r\tArgs:\n        s: 上一状态向量.\n        s: 动作向量.\n        s_: 当前状态向量.
+                        \r\tReturns:\n        奖励值.\n    '''\n    return 1.0`,
+                        name: "奖励函数（Python）",
+                        label: "请编写符合接口的奖励函数",
+                        rows: 12,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            modelCfg: [
+              {
+                title: "模型选择",
+                tables: [
+                  {
+                    items: [
+                      {
+                        type: "select",
+                        key: "modelFrame",
+                        values: null,
+                        name: "强化学习算法框架",
+                        label: "请选择强化学习算法框架",
+                        options: ["DQN", "DoubleDQN", "DuelingDQN", "A3C", "DDPG", "PPO"],
+                      },
+                      {
+                        type: "switch",
+                        key: "ifUseExistedParams",
+                        value: false,
+                        name: "使用已有模型参数",
+                        label: "",
+                      },
+                      {
+                        type: "select",
+                        key: "modelExistedParams",
+                        values: null,
+                        name: "已有模型参数",
+                        label: "请选择已有的模型参数",
+                        options: ["参数1", "参数2", "参数3", "参数4"],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                title: "网络超参数",
+                tables: [
+                  {
+                    nested: true,
+                    name: "层级结构",
+                    nestedTables: [
+                      {
+                        items: [
+                          {
+                            type: "select",
+                            key: "modelLayerType",
+                            values: "Input",
+                            name: "层类型",
+                            label: "请选择神经网络层类型",
+                            options: ["Input", "Affine", "BatchNorm", "Dropout", "Activation", "Output"],
+                          },
+                          {
+                            type: "select",
+                            key: "modelLayerActivation",
+                            values: null,
+                            name: "激活函数",
+                            label: "请选择激活函数",
+                            options: ["Linear", "Sigmoid", "Tanh", "Relu", "Leaky ReLU", "Softmax"],
+                          },
+                          {
+                            type: "number",
+                            key: "modelLayerUnits",
+                            value: 10,
+                            name: "神经元数目",
+                            label: "请输入神经元数目",
+                          },
+                        ],
+                      },
+                      {
+                        items: [
+                          {
+                            type: "select",
+                            key: "modelLayerType",
+                            values: "Affine",
+                            name: "层类型",
+                            label: "请选择神经网络层类型",
+                            options: ["Input", "Affine", "BatchNorm", "Dropout", "Activation", "Output"],
+                          },
+                          {
+                            type: "select",
+                            key: "modelLayerActivation",
+                            values: "Linear",
+                            name: "激活函数",
+                            label: "请选择激活函数",
+                            options: ["Linear", "Sigmoid", "Tanh", "Relu", "Leaky ReLU", "Softmax"],
+                          },
+                          {
+                            type: "number",
+                            key: "modelLayerUnits",
+                            value: 64,
+                            name: "神经元数目",
+                            label: "请输入神经元数目",
+                          },
+                        ],
+                      },
+                      {
+                        items: [
+                          {
+                            type: "select",
+                            key: "modelLayerType",
+                            values: "Output",
+                            name: "层类型",
+                            label: "请选择神经网络层类型",
+                            options: ["Input", "Affine", "BatchNorm", "Dropout", "Activation", "Output"],
+                          },
+                          {
+                            type: "select",
+                            key: "modelLayerActivation",
+                            values: "ReLU",
+                            name: "激活函数",
+                            label: "请选择激活函数",
+                            options: ["Linear", "Sigmoid", "Tanh", "ReLU", "Leaky ReLU", "Softmax"],
+                          },
+                          {
+                            type: "number",
+                            key: "modelLayerUnits",
+                            value: 4,
+                            name: "神经元数目",
+                            label: "请输入神经元数目",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    items: [
+                      {
+                        type: "select",
+                        key: "paramsInitMode",
+                        values: null,
+                        name: "参数初始化方法",
+                        label: "请选择参数初始化方法",
+                        options: ["Random", "Xavier", "Kaiming"],
+                      },
+                      {
+                        type: "switch",
+                        key: "ifUseCustomLossFunc",
+                        value: false,
+                        name: "使用自定义 Loss 函数",
+                        label: "",
+                      },
+                      {
+                        type: "select",
+                        key: "lossFunc",
+                        values: null,
+                        name: "Loss 函数",
+                        label: "请选择 Loss 函数",
+                        options: ["MSE", "MAE", "cross_entropy"],
+                      },
+                      {
+                        type: "textarea",
+                        key: "customLossFunc",
+                        value: ``,
+                        name: "Loss 函数（Python）",
+                        label: "请编写符合接口的 Loss 函数",
+                        rows: 12,
+                      },
+                      {
+                        type: "select",
+                        key: "modelOptimizer",
+                        values: null,
+                        name: "优化器",
+                        label: "请选择优化器",
+                        options: ["Adam", "RMSProp", "SGD"],
+                      },
+                      {
+                        type: "switch",
+                        key: "ifUseCustomLearningRate",
+                        value: false,
+                        name: "使用自定义学习率衰减策略",
+                        label: "",
+                      },
+                      {
+                        type: "text",
+                        key: "modelLearningRate",
+                        values: null,
+                        name: "学习率",
+                        label: "请输入学习率",
+                      },
+                      {
+                        type: "textarea",
+                        key: "customLearningRate",
+                        value: ``,
+                        name: "学习率衰减策略（Python）",
+                        label: "请编写符合接口的学习率衰减策略",
+                        rows: 12,
+                      },
+                      {
+                        type: "select",
+                        key: "modelRegularization",
+                        values: null,
+                        name: "正则化",
+                        label: "请选择正则化",
+                        options: ["L1", "L2", "L1+L2"],
+                      },
+                      {
+                        type: "switch",
+                        key: "ifUseCustomEarlyStopping",
+                        value: false,
+                        name: "使用自定义早停条件",
+                        label: "",
+                      },
+                      {
+                        type: "select",
+                        key: "modelEarlyStopping",
+                        values: null,
+                        name: "早停条件",
+                        label: "请选择早停条件",
+                        options: ["条件1", "条件2", "条件3"],
+                      },
+                      {
+                        type: "textarea",
+                        key: "customEarlyStopping",
+                        value: ``,
+                        name: "早停条件（Python）",
+                        label: "请编写符合接口的早停条件",
+                        rows: 12,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+        methods: {
+          serviceStatusColor(healthy, hover) {
+            return hover ? "yellow" : healthy ? "green" : "red";
+          },
+          displayComponent(e) {
+            console.log(e);
+            this.display = e;
+          },
+          addLayer(e) {
+            const layerTemplate = {
+              items: [
+                {
+                  type: "select",
+                  key: "modelLayerType",
+                  values: "Output",
+                  name: "层类型",
+                  label: "请选择神经网络层类型",
+                  options: ["Input", "Affine", "BatchNorm", "Dropout", "Activation", "Output"],
+                },
+                {
+                  type: "select",
+                  key: "modelLayerActivation",
+                  values: "ReLU",
+                  name: "激活函数",
+                  label: "请选择激活函数",
+                  options: ["Linear", "Sigmoid", "Tanh", "ReLU", "Leaky ReLU", "Softmax"],
+                },
+                {
+                  type: "number",
+                  key: "modelLayerUnits",
+                  value: 4,
+                  name: "神经元数目",
+                  label: "请输入神经元数目",
+                },
+              ],
+            };
+            const layers = this.current.modelCfg[1].tables[0].nestedTables;
+            layers.push(JSON.parse(JSON.stringify(layerTemplate)));
+          },
+          delLayer(index) {
+            const layers = this.current.modelCfg[1].tables[0].nestedTables;
+            layers.splice(index, 1);
+          },
+          upLayer(index) {
+            const layers = this.current.modelCfg[1].tables[0].nestedTables;
+            if (index == 0) {
+              return;
+            }
+            this.swapArrayItems(layers, index - 1, index);
+          },
+          downLayer(index) {
+            const layers = this.current.modelCfg[1].tables[0].nestedTables;
+            if (index == layers.length - 1) {
+              return;
+            }
+            this.swapArrayItems(layers, index, index + 1);
+          },
+          swapArrayItems(arr, idx1, idx2) {
+            let tmp = arr[idx1];
+            this.$set(arr, idx1, arr[idx2]);
+            this.$set(arr, idx2, tmp);
+          },
+        },
+        created() {
+          this.$vuetify.theme.dark = true;
+        },
+      });
+    </script>
+  </body>
+</html>
